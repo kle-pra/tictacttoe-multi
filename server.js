@@ -47,7 +47,7 @@ io.on('connection', socket => {
     });
 
     socket.on('newGame', playerId => {
-        game.onTurn = game.player1.socketId;
+        game.onTurn = Math.random() < 0.5 ? game.player1.socketId : game.player2.socketId;
         game.move = null;
         io.to(game.id).emit('newGame', game);
     });

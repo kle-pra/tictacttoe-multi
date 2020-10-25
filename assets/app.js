@@ -26,7 +26,6 @@ socket.on('join', (player) => {
 });
 
 socket.on('start', (game) => {
-  console.log("start", game)
   onTurn = game.onTurn;
   title.innerHTML = `Player ${player}'s turn.`;
   positions.forEach(pos => pos.addEventListener('click', move));
@@ -105,13 +104,13 @@ function newGame() {
 
 socket.on('newGame', (game) => {
   restart.style.display = 'none';
-
   positions.forEach(position => {
     position.classList.remove('cross');
     position.classList.remove('circle');
   })
   gameOver = false;
   onTurn = game.onTurn;
+  player = onTurn == game.player1.socketId ? 1 : 2;
   title.innerHTML = `Player ${player}'s turn.`;
   subtitle.innerHTML = `You are ${name} (game ID: ${gameId})`;
 });
