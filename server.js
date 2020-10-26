@@ -19,7 +19,7 @@ io.on('connection', socket => {
         player.name = 'Player 2';
         game = gamesWaiting.pop();
         game.player2 = player;
-        game.onTurn = game.player1.socketId;
+        game.onTurnSocketId = game.player1.socketId;
         games.push(game);
 
         io.to(game.player1.socketId).emit('start', game);
@@ -38,16 +38,16 @@ io.on('connection', socket => {
 
     io.to(player.socketId).emit('join', player);
 
-    socket.on('move', (move) => {
-        if (game.onTurn == socket.id) {
+    socket.on('move', move => {
+        if (game.onTurnSocketId == socket.id) {
             game.move = move;
-            game.onTurn = game.player1.socketId == game.onTurn ? game.player2.socketId : game.player1.socketId;
+            game.onTurnSocketId = game.player1.socketId == game.onTurnSocketId ? game.player2.socketId : game.player1.socketId;
             io.to(game.id).emit('move', game);
         }
     });
 
-    socket.on('newGame', playerId => {
-        game.onTurn = Math.random() < 0.5 ? game.player1.socketId : game.player2.socketId;
+    socket.on('newGame', () => {
+        game.onTurnSocketId = Math.random() < 0.5 ? game.player1.socketId : game.player2.socketId;
         game.move = null;
         io.to(game.id).emit('newGame', game);
     });

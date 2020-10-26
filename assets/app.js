@@ -9,39 +9,37 @@ const player1ScoreText = document.querySelector('#player1score');
 const player2ScoreText = document.querySelector('#player2score');
 restart.addEventListener('click', newGame);
 
-let player = 1;
+let currentPlayerRef = 1;
 let player1Score = 0;
 let player2Score = 0;
-let playerId;
 let gameId;
-let onTurn;
+let onTurnSocketId;
 let playerName;
 let gameOver = false;
 
-socket.on('join', (player) => {
-  playerId = socket.id;
-  name = player.name;
+socket.on('join', player => {
+  playerName = player.name;
   gameId = player.gameId;
-  subtitle.innerHTML = `You are ${name} (game ID: ${gameId})`;
+  subtitle.innerHTML = `You are ${playerName} (game ID: ${gameId})`;
 });
 
-socket.on('start', (game) => {
-  onTurn = game.onTurn;
-  title.innerHTML = `Player ${player}'s turn.`;
+socket.on('start', game => {
+  onTurnSocketId = game.onTurnSocketId;
+  title.innerHTML = `Player ${currentPlayerRef}'s turn.`;
   positions.forEach(pos => pos.addEventListener('click', move));
 });
 
 function move(event) {
-  if (onTurn == playerId) {
+  if (onTurnSocketId == socket.id) {
     socket.emit('move', event.target.id);
   } else {
     console.log('Not your turn.')
   }
 }
 
-socket.on('move', (game) => {
+socket.on('move', game => {
   mark(game.move);
-  onTurn = game.onTurn
+  onTurnSocketId = game.onTurnSocketId
 });
 
 function mark(move) {
@@ -53,26 +51,30 @@ function mark(move) {
     return;
   }
 
-  if (player == 1) {
+  if (currentPlayerRef == 1) {
     position.classList.add('cross');
   } else {
     position.classList.add('circle');
   }
 
-  if (gameEnd()) {
+  if (isGameWinned()) {
     gameOver = true;
-    player == 1 ? player1Score++ : player2Score++;
+    currentPlayerRef == 1 ? player1Score++ : player2Score++;
     player1ScoreText.innerHTML = player1Score;
     player2ScoreText.innerHTML = player2Score;
     restart.style.display = 'block';
-    title.textContent = `Player ${player}'s won!`;
+    title.textContent = `Player ${currentPlayerRef}'s won!`;
+  } else if (isGameATie()) {
+    gameOver = true;
+    restart.style.display = 'block';
+    title.textContent = `Game is a tie!`;
   } else {
-    player = player == 2 ? 1 : 2;
-    title.innerHTML = `Player ${player}'s turn.`;
+    currentPlayerRef = currentPlayerRef == 2 ? 1 : 2;
+    title.innerHTML = `Player ${currentPlayerRef}'s turn.`;
   }
 }
 
-function gameEnd() {
+function isGameWinned() {
   return winningCommnination([0, 1, 2]) ||
     winningCommnination([3, 4, 5]) ||
     winningCommnination([6, 7, 8]) ||
@@ -81,6 +83,12 @@ function gameEnd() {
     winningCommnination([2, 5, 8]) ||
     winningCommnination([0, 4, 8]) ||
     winningCommnination([2, 4, 6]);
+}
+
+function isGameATie() {
+  return !Array.from(positions).some(position =>
+    !position.classList.contains('cross') && !position.classList.contains('circle')
+  );
 }
 
 function winningCommnination(indeces) {
@@ -99,19 +107,18 @@ function winningCommnination(indeces) {
 }
 
 function newGame() {
-  socket.emit('newGame', playerId);
+  socket.emit('newGame', null);
 }
 
-socket.on('newGame', (game) => {
+socket.on('newGame', game => {
   restart.style.display = 'none';
   positions.forEach(position => {
-    position.classList.remove('cross');
-    position.classList.remove('circle');
+    position.classList.remove('cross', 'circle');
   })
   gameOver = false;
-  onTurn = game.onTurn;
-  player = onTurn == game.player1.socketId ? 1 : 2;
-  title.innerHTML = `Player ${player}'s turn.`;
+  onTurnSocketId = game.onTurnSocketId;
+  currentPlayerRef = onTurnSocketId == game.player1.socketId ? 1 : 2;
+  title.innerHTML = `Player ${currentPlayerRef}'s turn.`;
   subtitle.innerHTML = `You are ${name} (game ID: ${gameId})`;
 });
 

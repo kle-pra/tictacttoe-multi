@@ -2,8 +2,7 @@ class Game {
     id;
     player1;
     player2;
-    end = false;
-    onTurn;
+    onTurnSocketId;
     move;
 }
 class Player {
