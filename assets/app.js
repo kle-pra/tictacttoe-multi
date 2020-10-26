@@ -7,7 +7,7 @@ const subtitle = document.querySelector('.subtitle');
 const restart = document.querySelector('#playAgain');
 const player1ScoreText = document.querySelector('#player1score');
 const player2ScoreText = document.querySelector('#player2score');
-restart.addEventListener('click', newGame);
+restart.addEventListener('click', () => socket.emit('newGame', null));
 
 let currentPlayerRef = 1;
 let player1Score = 0;
@@ -27,6 +27,17 @@ socket.on('start', game => {
   onTurnSocketId = game.onTurnSocketId;
   title.innerHTML = `Player ${currentPlayerRef}'s turn.`;
   positions.forEach(pos => pos.addEventListener('click', move));
+});
+
+socket.on('newGame', game => {
+  onTurnSocketId = game.onTurnSocketId;
+  title.innerHTML = `Player ${currentPlayerRef}'s turn.`;
+  restart.style.display = 'none';
+  positions.forEach(position => {
+    position.classList.remove('cross', 'circle');
+  })
+  gameOver = false;
+  currentPlayerRef = onTurnSocketId == game.player1.socketId ? 1 : 2;
 });
 
 function move(event) {
@@ -105,22 +116,6 @@ function winningCommnination(indeces) {
   }
   return circlesWin || crossesWin;
 }
-
-function newGame() {
-  socket.emit('newGame', null);
-}
-
-socket.on('newGame', game => {
-  restart.style.display = 'none';
-  positions.forEach(position => {
-    position.classList.remove('cross', 'circle');
-  })
-  gameOver = false;
-  onTurnSocketId = game.onTurnSocketId;
-  currentPlayerRef = onTurnSocketId == game.player1.socketId ? 1 : 2;
-  title.innerHTML = `Player ${currentPlayerRef}'s turn.`;
-  subtitle.innerHTML = `You are ${name} (game ID: ${gameId})`;
-});
 
 window.onbeforeunload = function (event) {
   return confirm("Reloading will quite the game.");
