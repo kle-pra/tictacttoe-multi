@@ -31,13 +31,13 @@ socket.on('start', game => {
 
 socket.on('newGame', game => {
   onTurnSocketId = game.onTurnSocketId;
+  currentPlayerRef = onTurnSocketId == game.player1.socketId ? 1 : 2;
   title.innerHTML = `Player ${currentPlayerRef}'s turn.`;
   restart.style.display = 'none';
   positions.forEach(position => {
     position.classList.remove('cross', 'circle');
   })
   gameOver = false;
-  currentPlayerRef = onTurnSocketId == game.player1.socketId ? 1 : 2;
 });
 
 function move(event) {
