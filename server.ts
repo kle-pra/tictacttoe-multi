@@ -1,12 +1,14 @@
 import express, { Application } from 'express';
+import * as http from 'http';
+import { Server } from 'http';
 import socketio, { Socket } from 'socket.io';
 import { Game, Player } from './models/game.model';
 
 const app: Application = express();
 app.use(express.static('assets'));
 
-const http = require('http').createServer(app);
-const io = socketio(http);
+const httpServer: Server = http.createServer(app);
+const io = socketio(httpServer);
 const games: Game[] = []; // ongoing games
 const gamesWaiting: Game[] = [];
 
@@ -22,8 +24,8 @@ io.on('connection', (socket: Socket) => {
         game.onTurnSocketId = game.player1.socketId;
         games.push(game);
 
-        io.to(game.player1.socketId).emit('start', game);
-        io.to(game.player2.socketId).emit('start', game);
+        io.to(game.player1.socketId).emit('newGame', game);
+        io.to(game.player2.socketId).emit('newGame', game);
     } else {
         player.name = 'Player 1';
         game = new Game();
@@ -53,7 +55,7 @@ io.on('connection', (socket: Socket) => {
     });
 });
 
-http.listen(process.env.PORT || 3000, () => {
+httpServer.listen(process.env.PORT || 3000, () => {
     console.log('App running');
 });
 
